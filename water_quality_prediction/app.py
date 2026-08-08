@@ -1,7 +1,11 @@
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+
+# Get exact directory path where app.py is located
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # -------------------------------------------------------------
 # PAGE CONFIGURATION
@@ -100,21 +104,29 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# LOAD OR AUTO-TRAIN MODEL & SCALER
+# LOAD OR AUTO-TRAIN MODEL & SCALER WITH DYNAMIC FILE PATHS
 # -------------------------------------------------------------
 @st.cache_resource
 def load_assets():
+    model_path = os.path.join(BASE_DIR, 'water_model.pkl')
+    scaler_path = os.path.join(BASE_DIR, 'scaler.pkl')
+    csv_path = os.path.join(BASE_DIR, 'water_potability.csv')
+    
     try:
-        # Try loading pre-trained .pkl files if available
-        model = joblib.load('water_model.pkl')
-        scaler = joblib.load('scaler.pkl')
+        # Try loading pre-trained .pkl files from exact app directory
+        model = joblib.load(model_path)
+        scaler = joblib.load(scaler_path)
         return model, scaler
     except Exception:
-        # Fallback: Train model automatically if .pkl files are missing on GitHub
+        # Fallback: Train model automatically if .pkl files are missing
         from sklearn.preprocessing import StandardScaler
         from sklearn.ensemble import RandomForestClassifier
 
-        df = pd.read_csv('water_potability.csv')
+        if not os.path.exists(csv_path):
+            st.error(f"❌ File not found at path: `{csv_path}`. Make sure `water_potability.csv` is uploaded to your GitHub repository inside the `water_quality_prediction` folder alongside `app.py`!")
+            st.stop()
+
+        df = pd.read_csv(csv_path)
         df['ph'] = df['ph'].fillna(df['ph'].median())
         df['Sulfate'] = df['Sulfate'].fillna(df['Sulfate'].median())
         df['Trihalomethanes'] = df['Trihalomethanes'].fillna(df['Trihalomethanes'].median())
