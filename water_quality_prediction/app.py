@@ -151,7 +151,7 @@ st.markdown('<div class="sub-title">Next-Generation Water Potability & Safety An
 # -------------------------------------------------------------
 # 3 SLIDES TABS NAVIGATION
 # -------------------------------------------------------------
-tab1, tab2, tab3 = st.tabs(["📄 Slide 1: Abstract", "🎯 Slide 2: Objectives", "💻 Slide 3: Application Interface"])
+tab1, tab2, tab3 = st.tabs(["📄 Abstract", "🎯 Objectives", "💻 Application Interface"])
 
 # =============================================================
 # SLIDE 1: ABSTRACT
