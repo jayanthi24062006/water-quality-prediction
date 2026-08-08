@@ -1,8 +1,11 @@
 import streamlit as st
+import pandas as pd
 import numpy as np
 import joblib
 
-# Page Configuration
+# -------------------------------------------------------------
+# PAGE CONFIGURATION
+# -------------------------------------------------------------
 st.set_page_config(
     page_title="AquaSense Pro | Water Quality AI",
     page_icon="💧",
@@ -10,7 +13,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for Modern Bright / Light Theme
+# -------------------------------------------------------------
+# CUSTOM CSS FOR MODERN BRIGHT / LIGHT THEME
+# -------------------------------------------------------------
 st.markdown("""
 <style>
     /* Bright Clean Background */
@@ -94,7 +99,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Load Model & Scaler
+# -------------------------------------------------------------
+# LOAD TRAINED MODEL AND SCALER
+# -------------------------------------------------------------
 @st.cache_resource
 def load_assets():
     model = joblib.load('water_model.pkl')
@@ -106,16 +113,18 @@ try:
 except Exception:
     st.error("⚠️ Model files not found! Please run `python train_model.py` first.")
 
-# Title Banner
+# Application Title Banner
 st.markdown('<div class="main-title">💧 AquaSense AI</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Next-Generation Water Potability & Safety Analytics</div>', unsafe_allow_html=True)
 
-# 3 Slides Tabs Navigation
-tab1, tab2, tab3 = st.tabs(["📄 Abstract", "🎯 Objectives", "💻 Application Interface"])
+# -------------------------------------------------------------
+# 3 SLIDES TABS NAVIGATION
+# -------------------------------------------------------------
+tab1, tab2, tab3 = st.tabs(["📄 Slide 1: Abstract", "🎯 Slide 2: Objectives", "💻 Slide 3: Application Interface"])
 
-# -------------------------------------------------------------
+# =============================================================
 # SLIDE 1: ABSTRACT
-# -------------------------------------------------------------
+# =============================================================
 with tab1:
     st.markdown("""
     <div class="bright-card">
@@ -154,9 +163,9 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
 
-# -------------------------------------------------------------
+# =============================================================
 # SLIDE 2: OBJECTIVES
-# -------------------------------------------------------------
+# =============================================================
 with tab2:
     st.markdown("""
     <div class="bright-card">
@@ -187,13 +196,13 @@ with tab2:
         </div>
         """, unsafe_allow_html=True)
 
-# -------------------------------------------------------------
+# =============================================================
 # SLIDE 3: APPLICATION INTERFACE (Features Front, Results Downside)
-# -------------------------------------------------------------
+# =============================================================
 with tab3:
     st.markdown("### 🎛️ Input Water Quality Parameters")
     
-    # FRONT SECTION: Features Grid
+    # FRONT SECTION: Features Grid Inputs
     with st.container():
         col1, col2, col3 = st.columns(3)
         
@@ -229,8 +238,20 @@ with tab3:
     st.markdown("### 📊 Prediction Analysis (Result)")
 
     if predict_clicked:
-        input_data = np.array([[ph, hardness, solids, chloramines, sulfate, conductivity, organic_carbon, trihalomethanes, turbidity]])
-        scaled_data = scaler.transform(input_data)
+        # Pass DataFrame with feature names to scaler (fixes Streamlit Cloud transformation error)
+        input_df = pd.DataFrame([{
+            'ph': ph,
+            'Hardness': hardness,
+            'Solids': solids,
+            'Chloramines': chloramines,
+            'Sulfate': sulfate,
+            'Conductivity': conductivity,
+            'Organic_carbon': organic_carbon,
+            'Trihalomethanes': trihalomethanes,
+            'Turbidity': turbidity
+        }])
+        
+        scaled_data = scaler.transform(input_df)
         
         prediction = model.predict(scaled_data)[0]
         probs = model.predict_proba(scaled_data)[0]
