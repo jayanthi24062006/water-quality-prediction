@@ -100,18 +100,37 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# LOAD TRAINED MODEL AND SCALER
+# LOAD OR AUTO-TRAIN MODEL & SCALER
 # -------------------------------------------------------------
 @st.cache_resource
 def load_assets():
-    model = joblib.load('water_model.pkl')
-    scaler = joblib.load('scaler.pkl')
-    return model, scaler
+    try:
+        # Try loading pre-trained .pkl files if available
+        model = joblib.load('water_model.pkl')
+        scaler = joblib.load('scaler.pkl')
+        return model, scaler
+    except Exception:
+        # Fallback: Train model automatically if .pkl files are missing on GitHub
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.ensemble import RandomForestClassifier
 
-try:
-    model, scaler = load_assets()
-except Exception:
-    st.error("⚠️ Model files not found! Please run `python train_model.py` first.")
+        df = pd.read_csv('water_potability.csv')
+        df['ph'] = df['ph'].fillna(df['ph'].median())
+        df['Sulfate'] = df['Sulfate'].fillna(df['Sulfate'].median())
+        df['Trihalomethanes'] = df['Trihalomethanes'].fillna(df['Trihalomethanes'].median())
+
+        X = df.drop('Potability', axis=1)
+        y = df['Potability']
+
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X_scaled, y)
+
+        return model, scaler
+
+model, scaler = load_assets()
 
 # Application Title Banner
 st.markdown('<div class="main-title">💧 AquaSense AI</div>', unsafe_allow_html=True)
@@ -238,7 +257,6 @@ with tab3:
     st.markdown("### 📊 Prediction Analysis (Result)")
 
     if predict_clicked:
-        # Pass DataFrame with feature names to scaler (fixes Streamlit Cloud transformation error)
         input_df = pd.DataFrame([{
             'ph': ph,
             'Hardness': hardness,
